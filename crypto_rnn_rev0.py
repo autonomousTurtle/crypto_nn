@@ -21,6 +21,8 @@ NAME = f"{SEQ_LEN}-SEQ-{FUTURE_PERIOD_PREDICT}-PRED-{int(time.time())}"
 
 ######################### FUNCTIONS #######################
 
+# classify the data we are passing to see if the future value is better or worse than the current value
+# returns 1 if good, 0 if bad
 def classify(current, future):
     if float(future) > float(current): #if the future price is higher, we should buy
         return 1
@@ -28,7 +30,9 @@ def classify(current, future):
         return 0
 
 
-def preprocess_df(df):
+# process the data frame that is sent in - normalize all the data, create sequences with an associated target value for X min in the future
+# returns x and y
+def preprocess_df(df): 
     #use pandas to preprocess the data before sending into the rnn
     df = df.drop("future", 1) #don't need the future value anymore
 
@@ -46,8 +50,37 @@ def preprocess_df(df):
 
     for i in df.values: #iterate over the values
         prev_days.append([n for n in i[:-1]]) #grab each of the values not including the last value which is the target
-        print(prev_days)
+        if len(prev_days) == SEQ_LEN: #make sure we have 60 sequences
+            sequential_data.append([np.array(prev_days), i[-1]]) #append the values and the associated target
 
+    random.shuffle(sequential_data) #shuffle to randomize
+
+    #want the same number of buys and sells so we don't skew the nerual net one way or another during training
+    buys = []
+    sells = []
+
+    for seq, target in sequential_data: #iterate over the sequetial data
+        if target == 0: 
+            sells.append([seq, target])
+        elif target == 1:
+            buys.append([seq,target])
+
+    random.shuffle(buys)
+    random.shuffle(sells)
+
+    lower = min(len(buys), len(sells)) #find the minimum amount of buys or sells 
+
+    buys=buys[:lower]
+    sells=sells[:lower]
+    
+
+
+
+
+
+
+
+################## THE MAIN PROGRAM ############################3
 
 main_df = pd.DataFrame() #begin with an empty dataframe
 
@@ -83,4 +116,7 @@ last_5pct  = sorted(main_df.index.values)[-int(0.05*len(times))] #take last 5% o
 validation_main_df = main_df[(main_df.index >= last_5pct)] #validation data is data in last 5%
 main_df = main_df[(main_df.index <= last_5pct)] #training data is data in first 95%
 
+
+train_x, train_y = preprocess_df(main_df)
+validation_x, validation_y = preprocess_df(main_df)
 
