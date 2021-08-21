@@ -40,8 +40,8 @@ def preprocess_df(df):
         if col != "target": #if it is not the target value, normalize (target is already a 1 or 0)
             df[col] = df[col].pct_change # pct_changes normalzies the different currencies to a %
             df.dropna(inplace = True) #throw na if data is missing
-            df[col] = preprocessing.scale(df[col].values) #scales all the values between 0 and 1, .values ignores the time parameter
-
+            #df[col] = preprocessing.scale(df[col].values) #scales all the values between 0 and 1, .values ignores the time parameter
+    
     df.dropna(inplace=True) #clean up again in case we missed one
 
 
@@ -54,7 +54,6 @@ def preprocess_df(df):
             sequential_data.append([np.array(prev_days), i[-1]]) #append the values and the associated target
 
     random.shuffle(sequential_data) #shuffle to randomize
-
     #want the same number of buys and sells so we don't skew the nerual net one way or another during training
     buys = []
     sells = []
@@ -70,14 +69,23 @@ def preprocess_df(df):
 
     lower = min(len(buys), len(sells)) #find the minimum amount of buys or sells 
 
-    buys=buys[:lower]
-    sells=sells[:lower]
-    
+    buys=buys[:lower] #keep buys up until the shortest number
+    sells=sells[:lower] #keep sells up unitl the shortest number
 
+    #print("buys:", len(buys))
+    #print("sells:", len(sells))
 
+    sequential_data = buys+sells
+    random.shuffle(sequential_data) # shuffle again so it isn't buys and sells back to back
 
+    X = []
+    y = []
 
+    for seq, target in sequential_data:
+        X.append(seq) #X is the sequences
+        y.append(target) #y is the target
 
+    return np.array(X), y
 
 
 ################## THE MAIN PROGRAM ############################3
@@ -118,5 +126,10 @@ main_df = main_df[(main_df.index <= last_5pct)] #training data is data in first 
 
 
 train_x, train_y = preprocess_df(main_df)
-validation_x, validation_y = preprocess_df(main_df)
+validation_x, validation_y = preprocess_df(validation_main_df)
+
+#print some stats
+print(f"train data: {len(train_x)} validation: {len(validation_x)}")
+print(f"Dont buys: {train_y.count(0)}, buys: {train_y.count(1)}")
+print(f"VALIDATION Dont buys: {validation_y.count(0)}, buys: {validation_y.count(1)}")
 
