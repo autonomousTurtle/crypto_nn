@@ -17,7 +17,7 @@ FUTURE_PERIOD_PREDICT = 3 #how many minutes in the future to predict
 RATIO_TO_PREDICT = "LTC-USD" #which crypto to look at
 EPOCHS = 10 #number of passes through the data
 BATCH_SIZE = 64 #how many batches of data to run through the network
-NAME = f"{SEQ_LEN}-SEQ-{FUTURE_PERIOD_PREDICT}-PRED-{int(time.time())}" #to save in tensorboard
+NAME = f"{RATIO_TO_PREDICT}-RATIO-{SEQ_LEN}-SEQ-{FUTURE_PERIOD_PREDICT}-PRED-{int(time.time())}" #to save in tensorboard
 
 ######################### FUNCTIONS #######################
 
